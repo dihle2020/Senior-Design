@@ -59,7 +59,9 @@ def open_file_chooser():
     # Make sure to resize all images to 224, 224 otherwise they won't fit in the array
     image = image.resize((224, 224))
     image_array = np.asarray(image)
+    image.show()
 
+    #image.show()
     # Normalize the image
     normalized_image_array = (image_array.astype(np.float32) / 127.0) - 1
 

@@ -51,8 +51,6 @@ def open_file_chooser():
     i=1
     while(cap.isOpened()):
         ret, frame = cap.read()
-        #cv2.imwrite("frame%d.jpg" % i, frame)
-
         if ret == False:
             break
         if i%N_FRAMES == 0:
@@ -86,11 +84,11 @@ def open_file_chooser():
     inHigherThan = .3
     throughHigherThan = .7
     for pic in frames:
-        # Make sure to resize all images to 224, 224 otherwise they won't fit in the array
+        # convert image to cv2 format to RGB format
+        pic = cv2.cvtColor(pic, cv2.COLOR_BGR2RGB)
         image= Image.fromarray(pic)
+        # Make sure to resize all images to 224, 224 otherwise they won't fit in the array
         image = image.resize((224,224))
-        #image.show()
-        #new_pic = np.resize(pic, (224, 224,3))
 
         image_array = np.asarray(image)
 
@@ -100,7 +98,7 @@ def open_file_chooser():
         # Load the image into the array
         data[0] = normalized_image_array
         prediction = model.predict(data)
-        print(index,prediction[0])
+        print("frame", index, ': ',prediction[0][0])
         if(prediction[0][0] > inHigherThan):
             if(isInhoop1):
                 isInhoop2 = True
