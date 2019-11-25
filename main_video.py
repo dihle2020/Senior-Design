@@ -98,7 +98,7 @@ def open_file_chooser():
         # Load the image into the array
         data[0] = normalized_image_array
         prediction = model.predict(data)
-        print("frame", index, ': ',prediction[0][0])
+        print("frame", index, '-->', prediction[0])
         if(prediction[0][0] > inHigherThan):
             if(isInhoop1):
                 isInhoop2 = True
