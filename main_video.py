@@ -37,7 +37,7 @@ def open_file_chooser():
     child = tk.Tk()
     child.geometry("500x200")
     child.title("Video Classifer")
-    label = tk.Label(child, fg="dark green")
+    label = tk.Label(child, fg="dark blue")
     label.pack()
     label.config(text=str(filename))
     label2 = tk.Label(child, fg="dark blue",font=("Helvetica", 32))
@@ -112,9 +112,9 @@ def open_file_chooser():
    
     #if statesments to replace results with actual guess
     if(isThrough):
-        label2.config(text=str("Results: Shot Made!"))
+        label2.config(fg="green",text=str("Results: Shot Made!"))
     else:
-        label2.config(text=str("Results: Shot Missed!"))
+        label2.config(fg="red", text=str("Results: Shot Missed!"))
 
 
 
