@@ -14,7 +14,7 @@ import cv2
 
 
 ALPHA = .75
-N_FRAMES = 5
+N_FRAMES = 1
 
 # Load the model
 model = tensorflow.keras.models.load_model('keras_model.h5', compile=False)
@@ -26,7 +26,7 @@ np.set_printoptions(suppress=True)
 # Create the array of the right shape to feed into the keras model
 # The 'length' or number of images you can put into the array is
 # determined by the first position in the shape tuple, in this case 1.
-data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
+
 
 
 
@@ -51,6 +51,8 @@ def open_file_chooser():
     i=1
     while(cap.isOpened()):
         ret, frame = cap.read()
+        #cv2.imwrite("frame%d.jpg" % i, frame)
+
         if ret == False:
             break
         if i%N_FRAMES == 0:
@@ -76,26 +78,46 @@ def open_file_chooser():
 
     #check confidence level of shot in hoop followed by shot through hoop
 
+    data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
+    index = 0
+    isInhoop1 = False
+    isInhoop2 = False
+    isThrough = False
+    inHigherThan = .3
+    throughHigherThan = .7
     for pic in frames:
         # Make sure to resize all images to 224, 224 otherwise they won't fit in the array
-        new_pic = np.resize(pic, (224, 224,3))
-        image_array = np.asarray(new_pic)
+        image= Image.fromarray(pic)
+        image = image.resize((224,224))
+        #image.show()
+        #new_pic = np.resize(pic, (224, 224,3))
+
+        image_array = np.asarray(image)
 
         # Normalize the image
         normalized_image_array = (image_array.astype(np.float32) / 127.0) - 1
 
         # Load the image into the array
         data[0] = normalized_image_array
-
-        # run the inference
         prediction = model.predict(data)
-        print(prediction[0])
-        print(prediction[0][0])
+        print(index,prediction[0])
+        if(prediction[0][0] > inHigherThan):
+            if(isInhoop1):
+                isInhoop2 = True
+            else:
+                isInhoop1 = True
+        if(isInhoop1 and prediction[0][2] > throughHigherThan):
+            isThrough = True
+        index+=1
 
    
    
     #if statesments to replace results with actual guess
-    label2.config(text=str("Results:"))
+    if(isThrough):
+        label2.config(text=str("Results: Shot Made!"))
+    else:
+        label2.config(text=str("Results: Shot Missed!"))
+
 
 
 
