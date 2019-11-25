@@ -110,7 +110,7 @@ def open_file_chooser():
 
    
    
-    #if statesments to replace results with actual guess
+    #if statements to replace results with actual guess
     if(isThrough):
         label2.config(fg="green",text=str("Results: Shot Made!"))
     else:
