@@ -1,0 +1,4 @@
+0 Ball in hoop
+1 No Ball
+2 Through Hoop
+3 Ball in Air

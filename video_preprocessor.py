@@ -5,9 +5,11 @@ import os
 from keras.preprocessing import image   # for preprocessing the images
 import time
 from multiprocessing import Process, Queue
+from PIL import Image
+
 
 NUMBER_FRAMES = 40
-FRAMES_PER_SEC = 20
+FRAMES_PER_SEC = 5
 SLEEP_TIME = 1 / FRAMES_PER_SEC
 
 ######### Images need to be 224 x 224 x 3 ###########
@@ -41,32 +43,43 @@ def run_webcam(q):
   cam.release()
   cv2.destroyAllWindows
 
-def run_file(q):
-  cam = cv2.VideoCapture('make10.mp4')
+def run_file(q, file):
+  cam = cv2.VideoCapture(file)
   frame_num=1
   success = True
   while success == True:
       success,image = cam.read()
+      #print("From vpp ----------> success = ", success)
       if success:
-        #print("frame: %d" % frame_num)
+        print("frame: %d" % frame_num)
         # Our operations on the image come here
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        dimensions = (224, 224)
-        gray = cv2.resize(gray, dimensions, interpolation=cv2.INTER_AREA)
+        
+        # convert image to cv2 format to RGB format
+        img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        
+        image = Image.fromarray(img)
+        image = image.resize((224,224))  
+        image_array = np.asarray(image)
+        #gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        #dimensions = (224, 224)
+        img = cv2.resize(img, (448, 448), interpolation=cv2.INTER_AREA)
         
         # save frame as JPEG file
-        cv2.imwrite("%d.jpg" % (frame_num), gray) 
+        #cv2.imwrite("%d.jpg" % (frame_num), gray)
+        cv2.imwrite("%d.jpg" % (frame_num), img) 
             
         # Add resulting frame to Queue for processing on controller
-        q.put(gray) 
-
+        q.put(image_array) 
+        
         # Display the resulting frame
-        cv2.imshow('frame',gray)
+        cv2.imshow('frame', img)
         if cv2.waitKey(1) & 0xFF == ord('q'):
           break
+        """ if frame_num % 2 == 0:"""
+        time.sleep(0.5) 
+
       frame_num+=1
-      time.sleep(SLEEP_TIME)
       
   # When everything done, release the capture
   cam.release()
-  cv2.destroyAllWindows
+  cv2.destroyAllWindows()
