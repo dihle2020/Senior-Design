@@ -1,0 +1,2 @@
+0 ball_in_frame
+1 no_ball_in_frame
