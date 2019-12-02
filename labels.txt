@@ -1,4 +1,3 @@
-0 Ball in hoop
-1 No Ball
-2 Through Hoop
-3 Ball in Air
+0 In Net
+1 Through Hoop
+2 Inair/ nothing

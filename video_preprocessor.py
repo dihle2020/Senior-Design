@@ -51,32 +51,36 @@ def run_file(q, file):
       success,image = cam.read()
       #print("From vpp ----------> success = ", success)
       if success:
-        print("frame: %d" % frame_num)
+        print("vpp frame: %d" % frame_num)
         # Our operations on the image come here
         
         # convert image to cv2 format to RGB format
-        img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        #img = cv2.resize(image, (448, 448), interpolation=cv2.INTER_AREA)
         
-        image = Image.fromarray(img)
+        image = Image.fromarray(image)
         image = image.resize((224,224))  
         image_array = np.asarray(image)
         #gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         #dimensions = (224, 224)
-        img = cv2.resize(img, (448, 448), interpolation=cv2.INTER_AREA)
+        
         
         # save frame as JPEG file
         #cv2.imwrite("%d.jpg" % (frame_num), gray)
-        cv2.imwrite("%d.jpg" % (frame_num), img) 
+        #cv2.imwrite("%d.jpg" % (frame_num), image) 
             
         # Add resulting frame to Queue for processing on controller
         q.put(image_array) 
         
+        image = image.resize((448,448))  
+        image_array = np.asarray(image)
+        
         # Display the resulting frame
-        cv2.imshow('frame', img)
+        cv2.imshow('frame', image_array)
         if cv2.waitKey(1) & 0xFF == ord('q'):
           break
         """ if frame_num % 2 == 0:"""
-        time.sleep(0.5) 
+        time.sleep(0.033) 
 
       frame_num+=1
       

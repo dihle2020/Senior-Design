@@ -17,46 +17,46 @@ def main():
     
 
     # Load the model
-    model = tensorflow.keras.models.load_model('keras_model.h5', compile=False)
+    ballinframe_model = tensorflow.keras.models.load_model('keras_model_ballinframe.h5', compile=False)
+    shotmade_model = tensorflow.keras.models.load_model('keras_model_shotmade.h5', compile=False)
     
     # Create Queue for resource (in this case Image) sharing
     q = Queue()
 
     # In PRODUCTION, add filename from UI as argument
     # Create Process for preprocessing of images
-    pipeline = Process(target=vpp.run_file, args=(q, 'make10.mp4'))
+    pipeline = Process(target=vpp.run_file, args=(q, 'r32.mp4'))
 
     # start video preprocessing
     pipeline.start()
     
-    time.sleep(2)
+    time.sleep(0.5)
     
-
-    # In production, this is where work will be done
-    # For now, just lists the files in the directory as they come in
 
     iterations = 0
     current_frame = 1
     new_images = []
 
     # Set up flags for 2-Flag decision system
-    shot_made = False
-    shot_attempted = False
+    above_rim = False
     in_hoop = False
-    in_frame = False
+    below_hoop = False
     finished = False
+    shot_made = False
+    attempted = False
 
     # Initialize array for ??Storing Normalized Images??
     data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
         
     # check for new images four times a second for 10 seconds
     while True:
-        print(iterations)
+        print("------------------------------------------------------")
+        print("controller: ", iterations)
         """  #the number of frames to keep
         min_val_to_keep = current_frame - 20 """
         
         try:
-            frame = q.get(False)
+            frame = q.get(True, 2)
         except:
             print("Queue is empty")
             break
@@ -72,44 +72,48 @@ def main():
                 # Load the image into the array
                 data[0] = normalized_image_array 
                          
-                # This is where processing would occur.  Here however we simply get a random boolean back from model_sim testing module
-                # For implementation, replace the model_sim with the actual model call to davids model
-                if model_sim.ballInFrame(img):
-                    if not shot_attempted:
-                        print("From Model -----------------------> Shot attempted")
-                    in_frame = True
-                    shot_attempted = True
-                    if model.predict(data)[0][0] > 0.3:
-                        if in_hoop:
-                            shot_made = True                            
-                        else:
-                            print("I think a shot was made, let me double check")
-                            in_hoop = True
-                    else: 
-                        if in_hoop:
-                            print("Nevermind...")
-                        in_hoop = False
-                else: 
-                    in_frame = False
-                        
-                if shot_attempted and not in_frame:
-                    print("From Model -----------------------> Shot missed")
-                    shot_attempted = False
-                    finished = True
-                    break
-                    
-                    
-                if shot_made:
-                    print("From Model -----------------------> Shot made")
+                # Obtain Ball-In-Frame prediction
+                ballinframe_prediction = ballinframe_model.predict(data)[0]
+                #if not finished:
+                
+                if ballinframe_prediction[0] > 0.5:
+                    if not finished and not attempted:
+                        attempted = True
+                        print("From controller -------------> Shot attempted")    
+                else:
+                    print("From Controller ------------- > not in frame")
+                    if attempted and not shot_made:
+                        print("From Controller ----------------> Shot Missed")
+                        finished = True
+                        attempted = False
+                    if attempted:
+                        print("From Controller ---------------> Ball has left screen")
+                        print("Shot made: ", shot_made)
+                if attempted and not finished:
+                    print("Above Rim: ", above_rim)
+                    print("In hoop: ", in_hoop)
+                    print("Below Hoop: ", below_hoop)
+                    shotmade_prediction = shotmade_model.predict(data)[0]
+                    if shotmade_prediction[2] > 0.5 and not above_rim:
+                        print("above rim")
+                        above_rim = True
+                        pass
+                    if shotmade_prediction[1] > 0.5 and above_rim and not in_hoop:
+                        print("in hoop")
+                        in_hoop = True
+                        pass
+                    if shotmade_prediction[0] > 0.1 and above_rim and in_hoop and not below_hoop:
+                        below_hoop = True
+                        finished = True
+                        shot_made = True
+                        print("From Controller ----------------> Shot Made")
+                if finished:
+                    attempted = False
+                    above_rim = False
                     in_hoop = False
-                    shot_made = False
-                    shot_attempted = False
-                    finished = True
-                    break
+                    below_hoop = False
+                    pass
                 current_frame += 1
-            if finished:
-                finished = False
-                pass
         new_images = []
         
         #Remove the frames that are too old to keep
@@ -120,7 +124,7 @@ def main():
                 framenum = int(filename)
                 if framenum < min_val_to_keep:
                     os.remove(file) """
-        time.sleep(0.6)
+        #time.sleep(0.4)
         iterations += 1  
     
     
@@ -132,7 +136,6 @@ def main():
         
     # close video preprocessing
     pipeline.terminate()
-    #pipeline.join()
     
     
 
