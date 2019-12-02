@@ -25,7 +25,7 @@ def main():
 
     # In PRODUCTION, add filename from UI as argument
     # Create Process for preprocessing of images
-    pipeline = Process(target=vpp.run_file, args=(q, 'r32.mp4'))
+    pipeline = Process(target=vpp.run_file, args=(q, 'a28.mp4'))
 
     # start video preprocessing
     pipeline.start()
@@ -112,6 +112,7 @@ def main():
                     above_rim = False
                     in_hoop = False
                     below_hoop = False
+                    finished = False
                     pass
                 current_frame += 1
         new_images = []

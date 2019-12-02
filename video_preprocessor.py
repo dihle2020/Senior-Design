@@ -56,24 +56,13 @@ def run_file(q, file):
         
         # convert image to cv2 format to RGB format
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        #img = cv2.resize(image, (448, 448), interpolation=cv2.INTER_AREA)
         
         image = Image.fromarray(image)
         image = image.resize((224,224))  
         image_array = np.asarray(image)
-        #gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        #dimensions = (224, 224)
-        
-        
-        # save frame as JPEG file
-        #cv2.imwrite("%d.jpg" % (frame_num), gray)
-        #cv2.imwrite("%d.jpg" % (frame_num), image) 
             
         # Add resulting frame to Queue for processing on controller
         q.put(image_array) 
-        
-        image = image.resize((448,448))  
-        image_array = np.asarray(image)
         
         # Display the resulting frame
         cv2.imshow('frame', image_array)
