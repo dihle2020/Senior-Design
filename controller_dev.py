@@ -25,7 +25,7 @@ def main():
 
     # In PRODUCTION, add filename from UI as argument
     # Create Process for preprocessing of images
-    pipeline = Process(target=vpp.run_file, args=(q, 'makemakemiss_3.mp4'))
+    pipeline = Process(target=vpp.run_file, args=(q, 'missmakemake_3.mp4'))
 
     # start video preprocessing
     pipeline.start()
@@ -83,17 +83,17 @@ def main():
                     in_frame = True
                     #if not finished:
                     attempted = True
-                    counter = 40
+                    counter = 50
                     print("From controller ----------------------------------------------------------------------> Shot attempted")
-                if ballinframe_prediction[1] > 0.6:
+                if ballinframe_prediction[1] > 0.5:
                     in_frame = False
                     finished = True
                     if attempted:
                         print("From Controller -------------------------------------------------------------------------------> Shot Missed")
                 print(counter)
-                if counter >= 0:
+                if counter > 0:
                     if attempted and not finished:
-                        print("Above Rim: ", above_rim)
+                        print("Above Rim: ", above_rim) 
                         print("In hoop: ", in_hoop)
                         print("Below Hoop: ", below_hoop)
                         shotmade_prediction = shotmade_model.predict(data)[0]
