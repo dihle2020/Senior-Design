@@ -102,7 +102,7 @@ def main():
                             print("above rim")
                             above_rim = True
                             pass
-                        if shotmade_prediction[0] > 0.9 and above_rim and not in_hoop:
+                        if shotmade_prediction[0] > 0.5 and above_rim and not in_hoop:
                             print("in hoop")
                             in_hoop = True
                             pass
@@ -111,7 +111,8 @@ def main():
                             finished = True
                             shot_made = True
                             print("From Controller ----------------------------------------------------------------------------------> Shot Made")
-                counter -= 1
+                if not counter == 0:
+                    counter -= 1
                 """ if ballinframe_prediction[0] > 0.7:
                     if not finished and not attempted:
                         attempted = True
