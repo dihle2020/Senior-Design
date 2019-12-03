@@ -15,7 +15,7 @@ from PIL import Image
 
 def main():
     
-
+    loading_start = time.time()
     # Load the model
     ballinframe_model = tensorflow.keras.models.load_model('keras_model_ballinframe.h5', compile=False)
     shotmade_model = tensorflow.keras.models.load_model('keras_model_shotmade.h5', compile=False)
@@ -25,12 +25,11 @@ def main():
 
     # In PRODUCTION, add filename from UI as argument
     # Create Process for preprocessing of images
-    pipeline = Process(target=vpp.run_file, args=(q, 'test2.mp4'))
+    pipeline = Process(target=vpp.run_webcam, args=(q,))
 
     # start video preprocessing
     pipeline.start()
     
-    time.sleep(0.5)
     
 
     iterations = 0
@@ -49,13 +48,12 @@ def main():
 
     # Initialize array for ??Storing Normalized Images??
     data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
-        
+    
+    print("Controller Loading Time -> %s seconds ---" % (time.time() - loading_start))
     # check for new images four times a second for 10 seconds
     while True:
         print("------------------------------------------------------")
         print("controller: ", iterations)
-        """  #the number of frames to keep
-        min_val_to_keep = current_frame - 20 """
         
         try:
             frame = q.get(True, 5)

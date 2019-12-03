@@ -15,6 +15,7 @@ from PIL import Image
 
 def main():
     
+    loading_start = time.time()
 
     # Load the model
     ballinframe_model = tensorflow.keras.models.load_model('keras_model_ballinframe.h5', compile=False)
@@ -25,13 +26,11 @@ def main():
 
     # In PRODUCTION, add filename from UI as argument
     # Create Process for preprocessing of images
-    pipeline = Process(target=vpp.run_file, args=(q, 'missmakemake_3.mp4'))
+    pipeline = Process(target=vpp.run_webcam, args=(q,))
 
     # start video preprocessing
     pipeline.start()
-    
-    time.sleep(1)
-    
+        
 
     iterations = 0
     current_frame = 1
@@ -49,13 +48,16 @@ def main():
 
     # Initialize array for ??Storing Normalized Images??
     data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
-        
+    
+    print("Controller Loading Duration -> %s seconds ---" % (time.time() - loading_start))
+
     # check for new images four times a second for 10 seconds
     while True:
-        print("controller: ", iterations)
+        iteration_start = time.time()
+        #print("controller: ", iterations)
         
         try:
-            frame = q.get(True, 2)
+            frame = q.get(True, 10)
         except:
             print("Queue is empty")
             break
@@ -64,7 +66,7 @@ def main():
             
         if len(new_images) > 0:
             for img in new_images:
-                
+                #print(current_frame)
                 # Normalize the image
                 normalized_image_array = (img.astype(np.float32) / 127.0) - 1  
                 
@@ -76,7 +78,6 @@ def main():
                 
                 if ballinframe_prediction[0] > 0.6 and counter == 0:
                     in_frame = True
-                    #if not finished:
                     attempted = True
                     counter = 50
                     print("From controller ----------------------------------------------------------------------> Shot attempted")
@@ -111,10 +112,11 @@ def main():
                 
                 current_frame += 1
         new_images = []
+        #print("Controller Iteration Duration -> %s seconds ---" % (time.time() - iteration_start))
         iterations += 1  
     
     
-    
+    print("Controller Execution Duration -> %s seconds ---" % (time.time() - loading_start))
     # close Queue
     while not q.empty():
         q.get()
@@ -123,6 +125,7 @@ def main():
     # close video preprocessing
     pipeline.terminate()
     
+
     
 
     # clean up directory afterwards
