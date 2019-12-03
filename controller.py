@@ -10,7 +10,9 @@ import numpy as np
 from PIL import Image
 
 
- 
+ #Shutterspeed : 1/100
+ #Aperture: 4.5
+ #Iso: 1600
 
 
 def main():
@@ -26,15 +28,19 @@ def main():
 
     # In PRODUCTION, add filename from UI as argument
     # Create Process for preprocessing of images
-    pipeline = Process(target=vpp.run_webcam, args=(q,))
+    pipeline = Process(target=vpp.run_file, args=(q, 'missmakemake_3.mp4'))
 
     # start video preprocessing
     pipeline.start()
         
 
     iterations = 0
-    current_frame = 1
+    current_frame = 4
     new_images = []
+    
+    # Number of Frames to Skip
+    skip_ballinframe = 4
+    
 
     # Set up flags for 2-Flag decision system
     above_rim = False
@@ -74,9 +80,10 @@ def main():
                 data[0] = normalized_image_array 
                          
                 # Obtain Ball-In-Frame prediction
-                ballinframe_prediction = ballinframe_model.predict(data)[0]
-                
+                if current_frame % skip_ballinframe == 0:
+                    ballinframe_prediction = ballinframe_model.predict(data)[0]
                 if ballinframe_prediction[0] > 0.6 and counter == 0:
+                    print(ballinframe_prediction)
                     in_frame = True
                     attempted = True
                     counter = 50
@@ -89,6 +96,7 @@ def main():
                 if counter > 0:
                     if attempted and not finished:
                         shotmade_prediction = shotmade_model.predict(data)[0]
+                        print(shotmade_prediction)
                         if shotmade_prediction[2] > 0.9 and not above_rim:
                             above_rim = True
                             pass

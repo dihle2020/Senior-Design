@@ -25,15 +25,12 @@ def run_webcam(q):
   print("FPS: ", cam.get(cv2.CAP_PROP_FPS))
   while success:
     reading_start = time.time()
-    #print(send_frame)
-    if send_frame % 10 == 0:
-      
-      success,image = cam.read()
-      if success:
+    success,image = cam.read()
+    if success:
         # Our operations on the image come here
         
         # convert image to cv2 format to RGB format
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        #image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         
         image = Image.fromarray(image)
         image = image.resize((224,224))  
@@ -51,7 +48,6 @@ def run_webcam(q):
 
     frame_num+=1
     #print("VPP Iteration Duration -> %s seconds ---" % (time.time() - reading_start))
-    send_frame +=1
       
   # When everything done, release the capture
   cam.release()
