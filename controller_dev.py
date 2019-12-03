@@ -25,7 +25,7 @@ def main():
 
     # In PRODUCTION, add filename from UI as argument
     # Create Process for preprocessing of images
-    pipeline = Process(target=vpp.run_file, args=(q, 'missmakemake_3.mp4'))
+    pipeline = Process(target=vpp.run_file, args=(q, 'test2.mp4'))
 
     # start video preprocessing
     pipeline.start()
@@ -42,7 +42,6 @@ def main():
     in_hoop = False
     below_hoop = False
     finished = False
-    shot_made = False
     attempted = False
     in_frame = False
     

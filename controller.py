@@ -1,5 +1,5 @@
 import video_preprocessor as vpp
-from multiprocessing import Process, Queue
+from multiprocessing import Process, Queue, Event
 import os
 import time
 import cv2
@@ -15,110 +15,115 @@ from PIL import Image
 
 def main():
     
-    ALPHA = .75
-    N_FRAMES = 1
 
     # Load the model
-    model = tensorflow.keras.models.load_model('keras_model.h5', compile=False)
+    ballinframe_model = tensorflow.keras.models.load_model('keras_model_ballinframe.h5', compile=False)
+    shotmade_model = tensorflow.keras.models.load_model('keras_model_shotmade.h5', compile=False)
     
     # Create Queue for resource (in this case Image) sharing
     q = Queue()
 
-
     # In PRODUCTION, add filename from UI as argument
     # Create Process for preprocessing of images
-    pipeline = Process(target=vpp.run_file, args=(q, 'make10.mp4'))
+    pipeline = Process(target=vpp.run_file, args=(q, 'missmakemake_3.mp4'))
 
     # start video preprocessing
     pipeline.start()
-
-    # In production, this is where work will be done
-    # For now, just lists the files in the directory as they come in
+    
+    time.sleep(1)
+    
 
     iterations = 0
     current_frame = 1
     new_images = []
 
     # Set up flags for 2-Flag decision system
-    shot_made = False
-    shot_attempted = False
+    above_rim = False
     in_hoop = False
+    below_hoop = False
+    finished = False
+    attempted = False
     in_frame = False
+    
+    counter = 0
 
     # Initialize array for ??Storing Normalized Images??
     data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
-    
+        
     # check for new images four times a second for 10 seconds
-    while iterations < 20:
+    while True:
+        print("controller: ", iterations)
         
-        """  #the number of frames to keep
-        min_val_to_keep = current_frame - 20 """
-        
-        frame = q.get()
-        print("get")
-        if frame is not None:
+        try:
+            frame = q.get(True, 2)
+        except:
+            print("Queue is empty")
+            break
+        else:
             new_images.append(frame)
-        else: 
-            exit()
+            
         if len(new_images) > 0:
             for img in new_images:
-                image = Image.fromarray(img)
-                image = image.resize((224,224))  
-                image_array = np.asarray(image)
-
+                
                 # Normalize the image
-                normalized_image_array = (image_array.astype(np.float32) / 127.0) - 1            
-                # This is where processing would occur.  Here however we simply get a random boolean back from model_sim testing module
-                # For implementation, replace the model_sim with the actual model calls
-                if model_sim.ballInFrame(img):
-                    if not shot_attempted:
-                        print("Shot attempted")
+                normalized_image_array = (img.astype(np.float32) / 127.0) - 1  
+                
+                # Load the image into the array
+                data[0] = normalized_image_array 
+                         
+                # Obtain Ball-In-Frame prediction
+                ballinframe_prediction = ballinframe_model.predict(data)[0]
+                
+                if ballinframe_prediction[0] > 0.6 and counter == 0:
                     in_frame = True
-                    shot_attempted = True
-                    if model.predict(img):
-                        if in_hoop:
-                            shot_made = True
-                            break
-                        else:
-                            in_hoop = True
-                    else: 
-                        in_hoop = False
-                else: 
+                    #if not finished:
+                    attempted = True
+                    counter = 50
+                    print("From controller ----------------------------------------------------------------------> Shot attempted")
+                if ballinframe_prediction[1] > 0.5:
                     in_frame = False
-                        
-                if shot_attempted and not in_frame:
-                    print("Shot missed")
-                    shot_attempted = False
-                    
-                if shot_made:
-                    print("Shot made")
+                    finished = True
+                    if attempted:
+                        print("From Controller -------------------------------------------------------------------------------> Shot Missed")
+                if counter > 0:
+                    if attempted and not finished:
+                        shotmade_prediction = shotmade_model.predict(data)[0]
+                        if shotmade_prediction[2] > 0.9 and not above_rim:
+                            above_rim = True
+                            pass
+                        if shotmade_prediction[0] > 0.5 and above_rim and not in_hoop:
+                            in_hoop = True
+                            pass
+                        if shotmade_prediction[1] > 0.9 and above_rim and in_hoop and not below_hoop:
+                            below_hoop = True
+                            finished = True
+                            print("From Controller ----------------------------------------------------------------------------------> Shot Made")
+                if not counter == 0:
+                    counter -= 1
+                if finished:
+                    above_rim = False
                     in_hoop = False
-                    shot_made = False
-                    shot_attempted = False
+                    below_hoop = False
+                    attempted = False
+                    if not in_frame:
+                        finished = False
+                    pass
                 
                 current_frame += 1
         new_images = []
-        
-        #Remove the frames that are too old to keep
-        """ files = os.listdir()
-        for file in files:
-            filename, file_extension = os.path.splitext(file)
-            if file_extension == '.jpg':
-                framenum = int(filename)
-                if framenum < min_val_to_keep:
-                    os.remove(file) """
-        time.sleep(0.1)
         iterations += 1  
     
     
-        
-    # close video preprocessing
-    pipeline.join()
     
     # close Queue
     while not q.empty():
         q.get()
     q.close()
+        
+    # close video preprocessing
+    pipeline.terminate()
+    
+    
 
     # clean up directory afterwards
     files = os.listdir('.')
