@@ -25,7 +25,7 @@ def main():
 
     # In PRODUCTION, add filename from UI as argument
     # Create Process for preprocessing of images
-    pipeline = Process(target=vpp.run_file, args=(q, 'a28.mp4'))
+    pipeline = Process(target=vpp.run_file, args=(q, 'makemakemiss_3.mp4'))
 
     # start video preprocessing
     pipeline.start()
@@ -44,6 +44,9 @@ def main():
     finished = False
     shot_made = False
     attempted = False
+    in_frame = False
+    
+    counter = 0
 
     # Initialize array for ??Storing Normalized Images??
     data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
@@ -56,7 +59,7 @@ def main():
         min_val_to_keep = current_frame - 20 """
         
         try:
-            frame = q.get(True, 2)
+            frame = q.get(True, 5)
         except:
             print("Queue is empty")
             break
@@ -74,9 +77,42 @@ def main():
                          
                 # Obtain Ball-In-Frame prediction
                 ballinframe_prediction = ballinframe_model.predict(data)[0]
-                #if not finished:
                 
-                if ballinframe_prediction[0] > 0.5:
+                print("In frame?: ", ballinframe_prediction)
+                if ballinframe_prediction[0] > 0.6 and counter == 0:
+                    in_frame = True
+                    #if not finished:
+                    attempted = True
+                    counter = 40
+                    print("From controller ----------------------------------------------------------------------> Shot attempted")
+                if ballinframe_prediction[1] > 0.6:
+                    in_frame = False
+                    finished = True
+                    if attempted:
+                        print("From Controller -------------------------------------------------------------------------------> Shot Missed")
+                print(counter)
+                if counter >= 0:
+                    if attempted and not finished:
+                        print("Above Rim: ", above_rim)
+                        print("In hoop: ", in_hoop)
+                        print("Below Hoop: ", below_hoop)
+                        shotmade_prediction = shotmade_model.predict(data)[0]
+                        print(shotmade_prediction)
+                        if shotmade_prediction[2] > 0.9 and not above_rim:
+                            print("above rim")
+                            above_rim = True
+                            pass
+                        if shotmade_prediction[0] > 0.9 and above_rim and not in_hoop:
+                            print("in hoop")
+                            in_hoop = True
+                            pass
+                        if shotmade_prediction[1] > 0.9 and above_rim and in_hoop and not below_hoop:
+                            below_hoop = True
+                            finished = True
+                            shot_made = True
+                            print("From Controller ----------------------------------------------------------------------------------> Shot Made")
+                counter -= 1
+                """ if ballinframe_prediction[0] > 0.7:
                     if not finished and not attempted:
                         attempted = True
                         print("From controller -------------> Shot attempted")    
@@ -88,32 +124,35 @@ def main():
                         attempted = False
                     if attempted:
                         print("From Controller ---------------> Ball has left screen")
-                        print("Shot made: ", shot_made)
-                if attempted and not finished:
+                        print("Shot made: ", shot_made) """
+                """ if attempted and not finished:
                     print("Above Rim: ", above_rim)
                     print("In hoop: ", in_hoop)
                     print("Below Hoop: ", below_hoop)
                     shotmade_prediction = shotmade_model.predict(data)[0]
-                    if shotmade_prediction[2] > 0.5 and not above_rim:
+                    print(shotmade_prediction)
+                    if shotmade_prediction[2] > 0.9 and not above_rim:
                         print("above rim")
                         above_rim = True
                         pass
-                    if shotmade_prediction[1] > 0.5 and above_rim and not in_hoop:
+                    if shotmade_prediction[0] > 0.9 and above_rim and not in_hoop:
                         print("in hoop")
                         in_hoop = True
                         pass
-                    if shotmade_prediction[0] > 0.1 and above_rim and in_hoop and not below_hoop:
+                    if shotmade_prediction[1] > 0.9 and above_rim and in_hoop and not below_hoop:
                         below_hoop = True
                         finished = True
                         shot_made = True
-                        print("From Controller ----------------> Shot Made")
+                        print("From Controller ----------------> Shot Made") """
                 if finished:
-                    attempted = False
                     above_rim = False
                     in_hoop = False
                     below_hoop = False
-                    finished = False
+                    attempted = False
+                    if not in_frame:
+                        finished = False
                     pass
+                
                 current_frame += 1
         new_images = []
         

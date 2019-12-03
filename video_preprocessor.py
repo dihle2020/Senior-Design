@@ -46,12 +46,13 @@ def run_webcam(q):
 def run_file(q, file):
   cam = cv2.VideoCapture(file)
   frame_num=1
+  time.sleep(0.25)
   success = True
   while success == True:
       success,image = cam.read()
       #print("From vpp ----------> success = ", success)
       if success:
-        print("vpp frame: %d" % frame_num)
+        #print("vpp frame: %d" % frame_num)
         # Our operations on the image come here
         
         # convert image to cv2 format to RGB format
