@@ -57,9 +57,10 @@ def run_webcam(q):
 def run_file(q, file):
   cam = cv2.VideoCapture(file)
   frame_num=1
-  time.sleep(1)
+  time.sleep(2)
   success = True
   while success == True:
+      reading_start = time.time()
       success,image = cam.read()
       if success:
         # Our operations on the image come here
@@ -74,14 +75,17 @@ def run_file(q, file):
         # Add resulting frame to Queue for processing on controller
         q.put(image_array) 
         
+        image = image.resize((896,896))  
+        image_array = np.asarray(image)
         # Display the resulting frame
         cv2.imshow('frame', image_array)
         if cv2.waitKey(1) & 0xFF == ord('q'):
           break
-        time.sleep(0.033) 
+        time.sleep(0.045) 
 
       frame_num+=1
-      
+      #print("VPP Iteration Duration -> %s seconds ---" % (time.time() - reading_start))
+
   # When everything done, release the capture
   cam.release()
   cv2.destroyAllWindows()
