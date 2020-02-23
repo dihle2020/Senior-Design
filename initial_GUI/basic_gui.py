@@ -4,29 +4,19 @@ from appJar import gui
 from PIL import Image, ImageTk
 # handle button events
 
-
-
+# define functionalit
 def press(button):
-    if button == "Cancel":
-        app.stop()
-    else:
-        
-        homeTeam = app.getEntry("Home Team")
-        awayTeam = app.getEntry("Away Team")
-        quarter = app.getEntry("Quarter")
-        timeRemaining = app.getEntry("Time Remaining")
-        print("Home team:", homeTeam, "Away team:", awayTeam, " Quarter:", quarter,  "Time remaining: ", timeRemaining)
-        
-        #app.stopSubWindow()
+    app.stop()
 
 
 
-
+#functionality for clicking the train button
 def launch(btn):    
+    #open new window to indicate training session in progress
     app.startSubWindow("Demo",modal=True)
     app.emptyCurrentContainer()
     app.setSize("400x400")
-    
+    #load the training inputs into variables
     homeTeam = app.getEntry("Home Team" )
     homeScore = int(app.getEntry("Home Score"))
     awayTeam = app.getEntry("Away Team")
